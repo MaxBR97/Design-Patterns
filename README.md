@@ -1,2 +1,2 @@
 # Design-Patterns
-Practice of different design patterns.
+Practice of various design patterns.
