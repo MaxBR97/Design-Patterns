@@ -13,7 +13,9 @@ public:
     std::string pollRawMessage() const;
     ~SSL_Protocol();
 private:
-    Network_Ops ops;
+    CompressAlgo compressOps;
+    EncryptAlgo encryptOps;
+    ChecksumAlgo checksumOps;
     int symmetric_key;
     std::unique_ptr<char[]> socket_buffer;
     int buf_size;

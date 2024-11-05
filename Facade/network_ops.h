@@ -7,16 +7,28 @@
 #include <ctime>
 
 
-class Network_Ops {
+class ChecksumAlgo {
 public:
-    Network_Ops();
-    std::string& compress(std::string &message) const;
-    std::string& decompress(std::string &message) const;
+    ChecksumAlgo();
     std::string& add_checksum(std::string &message) const;
     std::string& remove_checksum(std::string &message) const;
     bool validate_checksum(std::string &message) const;
+    ~ChecksumAlgo();
+};
+
+class EncryptAlgo {
+public:
+    EncryptAlgo();
     std::string& encrypt(std::string &message, int key) const;
     std::string& decrypt(std::string &message, int key) const;
     int generateKey() const;
-    ~Network_Ops();
+    ~EncryptAlgo();
+};
+
+class CompressAlgo {
+public:
+    CompressAlgo();
+    std::string& compress(std::string &message) const;
+    std::string& decompress(std::string &message) const;
+    ~CompressAlgo();
 };

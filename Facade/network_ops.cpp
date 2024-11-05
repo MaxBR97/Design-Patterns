@@ -1,7 +1,10 @@
 #include "network_ops.h"
 
-Network_Ops::Network_Ops(){}
-std::string& Network_Ops::compress(std::string& message) const {
+ChecksumAlgo::ChecksumAlgo(){}
+EncryptAlgo::EncryptAlgo(){}
+CompressAlgo::CompressAlgo(){}
+
+std::string& CompressAlgo::compress(std::string& message) const {
     std::string compressed;
     char current_char = message[0];
     int count = 1;
@@ -22,7 +25,7 @@ std::string& Network_Ops::compress(std::string& message) const {
     return message;
 }
 
-std::string& Network_Ops::decompress(std::string& message) const {
+std::string& CompressAlgo::decompress(std::string& message) const {
     std::string decompressed;
     for (size_t i = 0; i < message.size(); ) {
         int count = 0;
@@ -40,7 +43,7 @@ std::string& Network_Ops::decompress(std::string& message) const {
     return message;
 }
 
-std::string& Network_Ops::add_checksum(std::string &message) const {
+std::string& ChecksumAlgo::add_checksum(std::string &message) const {
     short x = 0;
     for( char &c : message){
         x += static_cast<int>(c);
@@ -52,12 +55,12 @@ std::string& Network_Ops::add_checksum(std::string &message) const {
     std::cout << "added checksum: " << message <<std::endl;
         return message;
 }
-std::string& Network_Ops::remove_checksum(std::string &message) const {
+std::string& ChecksumAlgo::remove_checksum(std::string &message) const {
     message.erase(message.size()-2);
     std::cout << "checksum removed: " << message <<std::endl;
     return message;
 }
-bool Network_Ops::validate_checksum(std::string &message) const{
+bool ChecksumAlgo::validate_checksum(std::string &message) const{
     std::string copy(message);
     std::cout << "checksum comparison: " << copy <<std::endl;
     if( message == add_checksum(remove_checksum(copy)))
@@ -65,7 +68,7 @@ bool Network_Ops::validate_checksum(std::string &message) const{
     return false;
 }
 
-std::string& Network_Ops::encrypt(std::string& message, int key) const {
+std::string& EncryptAlgo::encrypt(std::string& message, int key) const {
     //return message;
     for (char& c : message) {
         c += key;
@@ -74,7 +77,7 @@ std::string& Network_Ops::encrypt(std::string& message, int key) const {
     return message;
 }
 
-std::string& Network_Ops::decrypt(std::string& message, int key) const {
+std::string& EncryptAlgo::decrypt(std::string& message, int key) const {
     //return message;
     for (char& c : message) {
         c -= key;
@@ -83,9 +86,11 @@ std::string& Network_Ops::decrypt(std::string& message, int key) const {
     return message;
 }
 
-int Network_Ops::generateKey() const {
+int EncryptAlgo::generateKey() const {
     srand(time(nullptr));
     return rand() % 26;
 }
 
-Network_Ops::~Network_Ops(){}
+ChecksumAlgo::~ChecksumAlgo(){}
+EncryptAlgo::~EncryptAlgo(){}
+CompressAlgo::~CompressAlgo(){}

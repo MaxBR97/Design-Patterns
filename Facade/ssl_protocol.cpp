@@ -1,11 +1,12 @@
 #include "ssl_protocol.h"
 
-SSL_Protocol::SSL_Protocol() : ops(), symmetric_key(ops.generateKey()) ,
+SSL_Protocol::SSL_Protocol() : compressOps(), encryptOps(), checksumOps(),
+    symmetric_key(encryptOps.generateKey()) ,
     socket_buffer(std::make_unique<char[]>(BUFFER_SIZE)), buf_size(0) {
 }
 
 bool SSL_Protocol::sendMessage (std::string &message)  {
-    ops.encrypt(ops.add_checksum(ops.compress(message)), symmetric_key);    
+    encryptOps.encrypt(checksumOps.add_checksum(compressOps.compress(message)), symmetric_key);    
     if(buf_size + message.size() + 1 == BUFFER_SIZE)
             return false;
     for( char c : message ) {
@@ -24,13 +25,13 @@ std::string SSL_Protocol::receiveMessage() {
         ans = socket_buffer[i] + ans;
         i--;
     }
-    ops.decrypt(ans, symmetric_key);
-    if(ops.validate_checksum(ans))
+    encryptOps.decrypt(ans, symmetric_key);
+    if(checksumOps.validate_checksum(ans))
         std::cout << "checksum is valid" << std::endl;
     else 
         std::cout << "checksum is NOT valid" << std::endl;
 
-    ops.decompress(ops.remove_checksum(ans));
+    compressOps.decompress(checksumOps.remove_checksum(ans));
     return ans;
 }
 
