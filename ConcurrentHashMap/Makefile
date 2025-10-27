@@ -2,7 +2,7 @@
 all: main
 
 main: main.o concurrentHashMap.o
-	gcc -o main main.o concurrentHashMap.o
+	gcc -lpthread -o main main.o concurrentHashMap.o
 
 main.o: main.c
 	gcc -g -c -o main.o main.c

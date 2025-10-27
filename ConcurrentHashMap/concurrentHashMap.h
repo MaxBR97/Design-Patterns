@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <semaphore.h>
+#include <pthread.h>
 
 typedef struct Pair {
     int key;
@@ -20,6 +21,7 @@ typedef struct ConcurrentHashMap {
     int capacity;
     size_t size;
     Node **elements;
+    pthread_mutex_t lock;
 
     size_t ( *hash )(void *self, int key);
     void (*rehash)(void *self);

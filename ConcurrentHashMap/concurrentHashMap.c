@@ -1,6 +1,7 @@
 #include "concurrentHashMap.h"
 #include <string.h>
 
+
 size_t hash(void *self, int key){
     ConcurrentHashMap *map = (ConcurrentHashMap*)self;
     return key % map->capacity;
@@ -17,13 +18,17 @@ void rehash(void *self, bool expand){
 
         for(int i = 0; i < map->capacity / 2; i++){
             Node *cur = map->elements[i];
-            while(cur != NULL){
+            int maximumRounds = 10; 
+            int round = 1;
+            while(cur != NULL && round <= maximumRounds){
                 Pair tmp;
                 memcpy(&tmp, &(cur->pair), sizeof(Pair));
                 Node* nextCur = cur->next;
                 delete(self, cur->pair.key);
                 put(self, tmp);
                 cur = nextCur;
+                round++;
+                
             }
         }
     } else {
@@ -34,7 +39,8 @@ void rehash(void *self, bool expand){
 
 bool put(void *self, Pair pair){
     ConcurrentHashMap *map = (ConcurrentHashMap*)self;
-    if(map->size >= map->capacity){
+    pthread_mutex_lock(&(map->lock));
+    if(map->size * 2 >= map->capacity){
         rehash(self, true);
     }
     size_t index = map->hash(self, pair.key);
@@ -42,6 +48,7 @@ bool put(void *self, Pair pair){
         map->elements[index] = malloc(sizeof(Node));
         map->elements[index]->pair = pair;
         map->elements[index]->next = NULL;
+        map->size ++;
     } else {
         Node *cur = map->elements[index];
         Node *prev = NULL;
@@ -56,36 +63,42 @@ bool put(void *self, Pair pair){
             if(prev != NULL){
                 prev->next = new_node;
             }
+            map->size ++;
+            
         } else {
             cur->pair = pair;
         }
     }
-    map->size ++;
-
+    pthread_mutex_unlock(&(map->lock));
     return true;
 }
 
 bool get(void *self, int key, int *value){
     ConcurrentHashMap *map = (ConcurrentHashMap*)self;
+    pthread_mutex_lock(&(map->lock));
     size_t index = map->hash(self, key);
     
     Node *cur = map->elements[index];
     while(cur != NULL){
         if(cur->pair.key == key){
             *value = cur->pair.val;
+            pthread_mutex_unlock(&(map->lock));
             return true;
         }
         cur = cur->next;
     }
     
+    pthread_mutex_unlock(&(map->lock));
     return false;
 }
 
 void delete(void *self, int key){
     ConcurrentHashMap *map = (ConcurrentHashMap*)self;
+    pthread_mutex_lock(&(map->lock));
     size_t index = map->hash(self, key);
     
     if(map->elements[index] == NULL){
+        pthread_mutex_unlock(&(map->lock));
         return;
     }
     
@@ -106,6 +119,7 @@ void delete(void *self, int key){
         free(cur);
         map->size --;
     }
+    pthread_mutex_unlock(&(map->lock));
 }
 
 void print(void *self){
@@ -121,7 +135,15 @@ void print(void *self){
 }
 
 ConcurrentHashMap* constructor() {
+   
     ConcurrentHashMap *map = malloc(sizeof(ConcurrentHashMap));
+
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&(map->lock), &attr);
+    pthread_mutexattr_destroy(&attr);
+    
     map->capacity = 4;
     map->size = 0;
     map->elements = (Node**)calloc(map->capacity, sizeof(Node*));
